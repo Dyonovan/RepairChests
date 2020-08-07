@@ -22,15 +22,11 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.GatherDataEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 @Mod(RepairChests.MODID)
 public class RepairChests
 {
     public static final String MODID = "repairchests";
-
-    public static final Logger LOGGER = LogManager.getLogger();
 
     public static final ItemGroup REPAIR_CHESTS_ITEM_GROUP = (new ItemGroup("repairchests") {
         @Override

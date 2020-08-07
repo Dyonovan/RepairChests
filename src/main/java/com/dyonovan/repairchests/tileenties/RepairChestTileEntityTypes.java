@@ -10,7 +10,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 public class RepairChestTileEntityTypes {
 
-    public static final DeferredRegister<TileEntityType<?>> TILE_ENTITIES = new DeferredRegister<>(ForgeRegistries.TILE_ENTITIES, RepairChests.MODID);
+    public static final DeferredRegister<TileEntityType<?>> TILE_ENTITIES = DeferredRegister.create(ForgeRegistries.TILE_ENTITIES, RepairChests.MODID);
 
     public static final RegistryObject<TileEntityType<BasicChestTileEntity>> BASIC_CHEST = TILE_ENTITIES.register(
             "basic_chest", () -> new TileEntityType<>(BasicChestTileEntity::new, Sets.newHashSet(RepairChestBlocks.BASIC_CHEST.get()), null));

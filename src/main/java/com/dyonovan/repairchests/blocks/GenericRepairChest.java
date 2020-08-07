@@ -6,8 +6,8 @@ import net.minecraft.block.*;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.CatEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
-import net.minecraft.fluid.IFluidState;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.inventory.container.Container;
@@ -85,13 +85,13 @@ public class GenericRepairChest extends Block implements IWaterLoggable {
     @Override
     public BlockState getStateForPlacement(BlockItemUseContext context) {
         Direction direction = context.getPlacementHorizontalFacing().getOpposite();
-        IFluidState iFluidState = context.getWorld().getFluidState(context.getPos());
+        FluidState iFluidState = context.getWorld().getFluidState(context.getPos());
 
         return this.getDefaultState().with(FACING, direction).with(WATERLOGGED, iFluidState.getFluid() == Fluids.WATER);
     }
 
     @Override
-    public IFluidState getFluidState(BlockState state) {
+    public FluidState getFluidState(BlockState state) {
         return state.get(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
     }
 
@@ -167,7 +167,7 @@ public class GenericRepairChest extends Block implements IWaterLoggable {
                 blockPos.getY() + 1, blockPos.getZ(), blockPos.getX() + 1, blockPos.getY() + 2, blockPos.getZ() + 1));
         if (!list.isEmpty()) {
             for (CatEntity catentity : list) {
-                if (catentity.isSitting()) {
+                if (catentity.func_233684_eK_()) {
                     return true;
                 }
             }

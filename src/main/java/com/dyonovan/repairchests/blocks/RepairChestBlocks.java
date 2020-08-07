@@ -23,7 +23,7 @@ import java.util.function.Supplier;
 
 public class RepairChestBlocks {
 
-    public static final DeferredRegister<Block> BLOCKS = new DeferredRegister<>(ForgeRegistries.BLOCKS, RepairChests.MODID);
+    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, RepairChests.MODID);
     public static final DeferredRegister<Item> ITEMS = RepairChestItems.ITEMS;
 
     public static final RegistryObject<BasicChestBlock> BASIC_CHEST = register("basic_chest",
