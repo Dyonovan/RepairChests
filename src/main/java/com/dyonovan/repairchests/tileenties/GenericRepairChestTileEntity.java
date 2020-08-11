@@ -131,7 +131,7 @@ public class GenericRepairChestTileEntity extends LockableLootTileEntity impleme
 
         // check chest contains and repair if item is repairable
         ++this.tickNum;
-        int ticktime = chestType == RepairChestTypes.BASIC ? 600 : chestType == RepairChestTypes.ADVANCED ? 400 : chestType == RepairChestTypes.ULTIMATE ? 200 : 600;
+        int ticktime = chestType == RepairChestTypes.BASIC ? 200 : chestType == RepairChestTypes.ADVANCED ? 100 : chestType == RepairChestTypes.ULTIMATE ? 40 : 200;
         if (tickNum >= ticktime) {
             for (int c = 0; c < this.getSizeInventory(); c++) {
                 ItemStack stack = this.getStackInSlot(c);
