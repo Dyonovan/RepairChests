@@ -1,0 +1,9 @@
+{
+  "_comment": "Chests",
+  "block.repairchests.basic_chest": "Baú de Reparo Básico",
+  "block.repairchests.advanced_chest": "Baú de Reparo Avançado",
+  "block.repairchests.ultimate_chest": "Baú de Reparo Final",
+
+  "_comment": "CreativeTab",
+  "itemGroup.repairchests": "Repair Chests"
+}
