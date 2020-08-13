@@ -31,22 +31,24 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import java.util.function.Supplier;
 
 @OnlyIn(value = Dist.CLIENT, _interface = IChestLid.class)
-public class GenericRepairChestTileEntity extends LockableLootTileEntity implements IChestLid, ITickableTileEntity {
+public abstract class GenericRepairChestTileEntity extends LockableLootTileEntity implements IChestLid, ITickableTileEntity {
+
+    public abstract int getTickTime();
 
     private NonNullList<ItemStack> chestContents;
     protected float lidAngle;
     protected float prevLidAngle;
     protected int numPlayersUsing;
     private int ticksSinceSync;
-    private RepairChestTypes chestType;
-    private Supplier<Block> blockToUse;
+    private final RepairChestTypes chestType;
+    private final Supplier<Block> blockToUse;
 
     private int tickNum;
 
     protected GenericRepairChestTileEntity(TileEntityType<?> typeIn, RepairChestTypes chestTypeIn, Supplier<Block> blockToUseIn) {
         super(typeIn);
 
-        this.chestContents = NonNullList.<ItemStack>withSize(chestTypeIn.size, ItemStack.EMPTY);
+        this.chestContents = NonNullList.withSize(chestTypeIn.size, ItemStack.EMPTY);
         this.chestType = chestTypeIn;
         this.blockToUse = blockToUseIn;
     }
@@ -131,8 +133,8 @@ public class GenericRepairChestTileEntity extends LockableLootTileEntity impleme
 
         // check chest contains and repair if item is repairable
         ++this.tickNum;
-        int ticktime = chestType == RepairChestTypes.BASIC ? 200 : chestType == RepairChestTypes.ADVANCED ? 100 : chestType == RepairChestTypes.ULTIMATE ? 40 : 200;
-        if (tickNum >= ticktime) {
+        //int ticktime = chestType == RepairChestTypes.BASIC ? 200 : chestType == RepairChestTypes.ADVANCED ? 100 : chestType == RepairChestTypes.ULTIMATE ? 40 : 200;
+        if (tickNum >= getTickTime()) {
             for (int c = 0; c < this.getSizeInventory(); c++) {
                 ItemStack stack = this.getStackInSlot(c);
 

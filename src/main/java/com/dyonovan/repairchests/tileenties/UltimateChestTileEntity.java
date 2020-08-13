@@ -12,6 +12,11 @@ public class UltimateChestTileEntity extends GenericRepairChestTileEntity {
     }
 
     @Override
+    public int getTickTime() {
+        return 40;
+    }
+
+    @Override
     protected Container createMenu(int windowId, PlayerInventory playerInventory) {
         return RepairChestContainer.createUltimateContainer(windowId, playerInventory, this);
     }
