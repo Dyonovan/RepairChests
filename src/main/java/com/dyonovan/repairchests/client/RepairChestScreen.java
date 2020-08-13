@@ -37,8 +37,8 @@ public class RepairChestScreen extends ContainerScreen<RepairChestContainer> imp
 
     @Override
     protected void func_230451_b_(MatrixStack matrixStack, int mouseX, int mouseY) {
-        this.field_230712_o_.func_238422_b_(matrixStack, this.field_230704_d_, 8.0F, 6.0F, 4210752);
-        this.field_230712_o_.func_238422_b_(matrixStack, this.playerInventory.getDisplayName(), 8.0F, (float) (this.ySize - 96 + 2), 4210752);
+        this.field_230712_o_.func_238422_b_(matrixStack, this.field_230704_d_.func_241878_f(), 8.0F, 6.0F, 4210752);
+        this.field_230712_o_.func_238422_b_(matrixStack, this.playerInventory.getDisplayName().func_241878_f(), 8.0F, (float) (this.ySize - 96 + 2), 4210752);
     }
 
     @Override

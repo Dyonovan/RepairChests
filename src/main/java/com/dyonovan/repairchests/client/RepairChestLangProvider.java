@@ -55,7 +55,7 @@ public class RepairChestLangProvider extends LanguageProvider {
     }
 
     private void add(ItemGroup group, String name) {
-        this.add(group.getTranslationKey(), name);
+        this.add(group.func_242392_c().getString(), name);
     }
 
     private static final String NORMAL_CHARS =
