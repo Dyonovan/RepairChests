@@ -1,5 +1,6 @@
 package com.dyonovan.repairchests.tileenties;
 
+import com.dyonovan.repairchests.Config;
 import com.dyonovan.repairchests.blocks.RepairChestBlocks;
 import com.dyonovan.repairchests.blocks.RepairChestTypes;
 
@@ -11,6 +12,6 @@ public class BasicChestTileEntity extends GenericRepairChestTileEntity {
 
     @Override
     public int getTickTime() {
-        return 200;
+        return Config.GENERAL.basicRepairTime.get() * 20;
     }
 }

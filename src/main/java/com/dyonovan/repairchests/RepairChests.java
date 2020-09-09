@@ -16,8 +16,10 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.GatherDataEvent;
@@ -32,7 +34,7 @@ public class RepairChests
         @Override
         @OnlyIn(Dist.CLIENT)
         public ItemStack createIcon() {
-            return new ItemStack(Blocks.CHEST);
+            return new ItemStack(RepairChestBlocks.ULTIMATE_CHEST.get());
         }
     });
 
@@ -42,9 +44,9 @@ public class RepairChests
         modBus.addListener(this::setup);
         modBus.addListener(this::gatherData);
 
-        DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> {
-            modBus.addListener(this::setupClient);
-        });
+        DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> modBus.addListener(this::setupClient));
+
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
 
         RepairChestBlocks.BLOCKS.register(modBus);
         RepairChestItems.ITEMS.register(modBus);

@@ -133,12 +133,11 @@ public abstract class GenericRepairChestTileEntity extends LockableLootTileEntit
 
         // check chest contains and repair if item is repairable
         ++this.tickNum;
-        //int ticktime = chestType == RepairChestTypes.BASIC ? 200 : chestType == RepairChestTypes.ADVANCED ? 100 : chestType == RepairChestTypes.ULTIMATE ? 40 : 200;
+
         if (tickNum >= getTickTime()) {
             for (int c = 0; c < this.getSizeInventory(); c++) {
                 ItemStack stack = this.getStackInSlot(c);
 
-                //if (!stack.isEmpty() && !stack.isItemEqual(new ItemStack(Items.AIR)) && stack.isRepairable() && stack.getDamage() > 0) {
                 if (!stack.isEmpty() && stack.isRepairable() && stack.getDamage() > 0) {
                     stack.setDamage(stack.getDamage() - 1);
                     tickNum = 0;
@@ -174,7 +173,7 @@ public abstract class GenericRepairChestTileEntity extends LockableLootTileEntit
         double d1 = (double) this.pos.getY() + 0.5D;
         double d2 = (double) this.pos.getZ() + 0.5D;
 
-        this.world.playSound((PlayerEntity) null, d0, d1, d2, soundIn, SoundCategory.BLOCKS, 0.5F, this.world.rand.nextFloat() * 0.1F + 0.9F);
+        this.world.playSound(null, d0, d1, d2, soundIn, SoundCategory.BLOCKS, 0.5F, this.world.rand.nextFloat() * 0.1F + 0.9F);
     }
 
     @Override
@@ -255,6 +254,7 @@ public abstract class GenericRepairChestTileEntity extends LockableLootTileEntit
     protected Container createMenu(int windowId, PlayerInventory playerInventory) {
         return RepairChestContainer.createBasicContainer(windowId, playerInventory, this);
     }
+
 
     public void wasPlaced(LivingEntity livingEntity, ItemStack stack) {
     }
