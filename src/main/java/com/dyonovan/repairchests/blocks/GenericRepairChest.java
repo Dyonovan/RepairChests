@@ -167,7 +167,7 @@ public class GenericRepairChest extends Block implements IWaterLoggable {
                 blockPos.getY() + 1, blockPos.getZ(), blockPos.getX() + 1, blockPos.getY() + 2, blockPos.getZ() + 1));
         if (!list.isEmpty()) {
             for (CatEntity catentity : list) {
-                if (catentity.func_233684_eK_()) {
+                if (catentity.isSitting()) {
                     return true;
                 }
             }
