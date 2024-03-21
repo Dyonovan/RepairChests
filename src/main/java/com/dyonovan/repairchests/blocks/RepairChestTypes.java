@@ -6,15 +6,18 @@ import com.dyonovan.repairchests.tileenties.AdvancedChestTileEntity;
 import com.dyonovan.repairchests.tileenties.BasicChestTileEntity;
 import com.dyonovan.repairchests.tileenties.GenericRepairChestTileEntity;
 import com.dyonovan.repairchests.tileenties.UltimateChestTileEntity;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Locale;
 
-public enum RepairChestTypes implements IStringSerializable {
+public enum RepairChestTypes implements StringRepresentable {
 
     BASIC(1, 1, 184, 184, new ResourceLocation(RepairChests.MODID, "textures/gui/basic_container.png"), 256, 256),
     ADVANCED(9, 9, 184, 133, new ResourceLocation(RepairChests.MODID, "textures/gui/advanced_container.png"), 256, 256),
@@ -52,43 +55,34 @@ public enum RepairChestTypes implements IStringSerializable {
         return this.name;
     }
 
-    @Override
-    public String getName() {
-        return this.getEnglishName();
-    }
-
     public int getRowCount() {
         return this.size / this.rowLength;
     }
 
     public boolean isTransparent() {
-        //return this == CRYSTAL;
         return false;
     }
 
-    public static Block get(RepairChestTypes type) {
-        switch (type) {
-            case BASIC:
-                return RepairChestBlocks.BASIC_CHEST.get();
-            case ADVANCED:
-                return RepairChestBlocks.ADVANCED_CHEST.get();
-            case ULTIMATE:
-                return RepairChestBlocks.ULTIMATE_CHEST.get();
-            default:
-                return Blocks.CHEST;
-        }
+    public static List<Block> get(RepairChestTypes type) {
+        return switch (type) {
+            case BASIC -> List.of(RepairChestBlocks.BASIC_CHEST.get());
+            case ADVANCED -> List.of(RepairChestBlocks.ADVANCED_CHEST.get());
+            case ULTIMATE -> List.of(RepairChestBlocks.ULTIMATE_CHEST.get());
+            default -> List.of(Blocks.CHEST);
+        };
     }
 
-    public GenericRepairChestTileEntity makeEntity() {
-        switch (this) {
-            case BASIC:
-                return new BasicChestTileEntity();
-            case ADVANCED:
-                return new AdvancedChestTileEntity();
-            case ULTIMATE:
-                return new UltimateChestTileEntity();
-            default:
-                return null;
-        }
+    public GenericRepairChestTileEntity makeEntity(BlockPos blockPos, BlockState blockState) {
+        return switch (this) {
+            case BASIC -> new BasicChestTileEntity(blockPos, blockState);
+            case ADVANCED -> new AdvancedChestTileEntity(blockPos, blockState);
+            case ULTIMATE -> new UltimateChestTileEntity(blockPos, blockState);
+            default -> null;
+        };
+    }
+
+    @Override
+    public String getSerializedName() {
+        return this.getEnglishName();
     }
 }
