@@ -1,56 +1,96 @@
 package com.dyonovan.repairchests.client.renderers;
 
-import com.dyonovan.repairchests.blocks.RepairChestTypes;
 import com.dyonovan.repairchests.blocks.GenericRepairChest;
+import com.dyonovan.repairchests.blocks.RepairChestTypes;
 import com.dyonovan.repairchests.client.RepairChestModels;
+import com.dyonovan.repairchests.client.RepairChestsClientEvents;
 import com.dyonovan.repairchests.tileenties.GenericRepairChestTileEntity;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.renderer.Atlases;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
+import it.unimi.dsi.fastutil.floats.Float2FloatFunction;
+import it.unimi.dsi.fastutil.ints.Int2IntFunction;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.Vector3f;
-import net.minecraft.client.renderer.model.Material;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.client.renderer.tileentity.DualBrightnessCallback;
-import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.tileentity.IChestLid;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityMerger;
-import net.minecraft.util.Direction;
-import net.minecraft.world.World;
+import net.minecraft.client.renderer.Sheets;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.renderer.blockentity.BrightnessCombiner;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.resources.model.Material;
+import net.minecraft.core.Direction;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DoubleBlockCombiner;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.LidBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import org.joml.Vector3f;
 
-public class RepairChestTileEntityRenderer<T extends TileEntity & IChestLid> extends TileEntityRenderer<T> {
+import java.util.Arrays;
+import java.util.List;
 
-    private final ModelRenderer chestLid;
-    private final ModelRenderer chestBottom;
-    private final ModelRenderer chestLock;
+@OnlyIn(Dist.CLIENT)
+public class RepairChestTileEntityRenderer<T extends BlockEntity & LidBlockEntity> implements BlockEntityRenderer<T> {
 
-    public RepairChestTileEntityRenderer(TileEntityRendererDispatcher tileEntityRendererDispatcher) {
-        super(tileEntityRendererDispatcher);
+    private final ModelPart chestLid;
+    private final ModelPart chestBottom;
+    private final ModelPart chestLock;
 
-        this.chestBottom = new ModelRenderer(64, 64, 0, 19);
-        this.chestBottom.addBox(1.0F, 0.0F, 1.0F, 14.0F, 10.0F, 14.0F, 0.0F);
-        this.chestLid = new ModelRenderer(64, 64, 0, 0);
-        this.chestLid.addBox(1.0F, 0.0F, 0.0F, 14.0F, 5.0F, 14.0F, 0.0F);
-        this.chestLid.rotationPointY = 9.0F;
-        this.chestLid.rotationPointZ = 1.0F;
-        this.chestLock = new ModelRenderer(64, 64, 0, 0);
-        this.chestLock.addBox(7.0F, -1.0F, 15.0F, 2.0F, 4.0F, 1.0F, 0.0F);
-        this.chestLock.rotationPointY = 8.0F;
+    private final BlockEntityRenderDispatcher renderer;
+
+    private static final List<ModelItem> MODEL_ITEMS = Arrays.asList(
+            new ModelItem(new Vector3f(0.3F, 0.45F, 0.3F), 3.0F),
+            new ModelItem(new Vector3f(0.7F, 0.45F, 0.3F), 3.0F),
+            new ModelItem(new Vector3f(0.3F, 0.45F, 0.7F), 3.0F),
+            new ModelItem(new Vector3f(0.7F, 0.45F, 0.7F), 3.0F),
+            new ModelItem(new Vector3f(0.3F, 0.1F, 0.3F), 3.0F),
+            new ModelItem(new Vector3f(0.7F, 0.1F, 0.3F), 3.0F),
+            new ModelItem(new Vector3f(0.3F, 0.1F, 0.7F), 3.0F),
+            new ModelItem(new Vector3f(0.7F, 0.1F, 0.7F), 3.0F),
+            new ModelItem(new Vector3f(0.5F, 0.32F, 0.5F), 3.0F)
+    );
+
+    public RepairChestTileEntityRenderer(BlockEntityRendererProvider.Context context) {
+        ModelPart modelPart = context.bakeLayer(RepairChestsClientEvents.REPAIR_CHEST);
+
+        this.renderer = context.getBlockEntityRenderDispatcher();
+        this.chestBottom = modelPart.getChild("basic_bottom");
+        this.chestLid = modelPart.getChild("basic_lid");
+        this.chestLock = modelPart.getChild("basic_lock");
+    }
+
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition meshDefinition = new MeshDefinition();
+        PartDefinition partDefinition = meshDefinition.getRoot();
+
+        partDefinition.addOrReplaceChild("basic_bottom", CubeListBuilder.create().texOffs(0, 19).addBox(1.0F, 0.0F, 1.0F, 14.0F, 10.0F, 14.0F), PartPose.ZERO);
+        partDefinition.addOrReplaceChild("basic_lid", CubeListBuilder.create().texOffs(0, 0).addBox(1.0F, 0.0F, 0.0F, 14.0F, 5.0F, 14.0F), PartPose.offset(0.0F, 9.0F, 1.0F));
+        partDefinition.addOrReplaceChild("basic_lock", CubeListBuilder.create().texOffs(0, 0).addBox(7.0F, -1.0F, 15.0F, 2.0F, 4.0F, 1.0F), PartPose.offset(0.0F, 8.0F, 0.0F));
+
+        return LayerDefinition.create(meshDefinition, 64, 64);
     }
 
     @Override
-    public void render(T tileEntityIn, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
+    public void render(T tileEntityIn, float partialTicks, PoseStack poseStack, MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
         GenericRepairChestTileEntity tileEntity = (GenericRepairChestTileEntity) tileEntityIn;
 
-        World world = tileEntity.getWorld();
-        boolean flag = world != null;
+        Level level = tileEntity.getLevel();
+        boolean useTileEntityBlockState = level != null;
 
-        BlockState blockstate = flag ? tileEntity.getBlockState() : (BlockState) tileEntity.getBlockToUse().getDefaultState().with(GenericRepairChest.FACING, Direction.SOUTH);
+        BlockState blockstate = useTileEntityBlockState ? tileEntity.getBlockState() : (BlockState) tileEntity.getBlockToUse().defaultBlockState().setValue(GenericRepairChest.FACING, Direction.SOUTH);
         Block block = blockstate.getBlock();
         RepairChestTypes chestType = RepairChestTypes.BASIC;
         RepairChestTypes actualType = GenericRepairChest.getTypeFromBlock(block);
@@ -59,44 +99,67 @@ public class RepairChestTileEntityRenderer<T extends TileEntity & IChestLid> ext
             chestType = actualType;
         }
 
-        if (block instanceof GenericRepairChest) {
-            GenericRepairChest ironChestBlock = (GenericRepairChest) block;
+        if (block instanceof GenericRepairChest genericRepairChest) {
+            poseStack.pushPose();
 
-            matrixStackIn.push();
-            float f = blockstate.get(GenericRepairChest.FACING).getHorizontalAngle();
-            matrixStackIn.translate(0.5D, 0.5D, 0.5D);
-            matrixStackIn.rotate(Vector3f.YP.rotationDegrees(-f));
-            matrixStackIn.translate(-0.5D, -0.5D, -0.5D);
+            float f = blockstate.getValue(GenericRepairChest.FACING).toYRot();
 
-            TileEntityMerger.ICallbackWrapper<? extends GenericRepairChestTileEntity> iCallbackWrapper;
-            if (flag) {
-                iCallbackWrapper = ironChestBlock.getWrapper(blockstate, world, tileEntity.getPos(), true);
-            }
-            else {
-                iCallbackWrapper = TileEntityMerger.ICallback::func_225537_b_;
-            }
+            poseStack.translate(0.5D, 0.5D, 0.5D);
+            poseStack.mulPose(Axis.YP.rotationDegrees(-f));
+            poseStack.translate(-0.5D, -0.5D, -0.5D);
 
-            float f1 = iCallbackWrapper.apply(GenericRepairChest.getLid((IChestLid) tileEntity)).get(partialTicks);
-            f1 = 1.0F - f1;
-            f1 = 1.0F - f1 * f1 * f1;
-            int i = iCallbackWrapper.apply(new DualBrightnessCallback<>()).applyAsInt(combinedLightIn);
+            DoubleBlockCombiner.NeighborCombineResult<? extends GenericRepairChestTileEntity> neighborCombineResult;
 
-            Material material = new Material(Atlases.CHEST_ATLAS, RepairChestModels.chooseChestTexture(chestType));
-            IVertexBuilder ivertexbuilder = material.getBuffer(bufferIn, RenderType::getEntityCutout);
+            if (useTileEntityBlockState)
+                neighborCombineResult = genericRepairChest.combine(blockstate, level, tileEntityIn.getBlockPos(), true);
+            else
+                neighborCombineResult = DoubleBlockCombiner.Combiner::acceptNone;
 
-            this.handleModelRender(matrixStackIn, ivertexbuilder, this.chestLid, this.chestLock, this.chestBottom, f1, i, combinedOverlayIn);
+            float openness = neighborCombineResult.<Float2FloatFunction>apply(GenericRepairChest.opennessCombiner(tileEntity)).get(partialTicks);
+            openness = 1.0F - openness;
+            openness = 1.0F - openness * openness * openness;
 
-            matrixStackIn.pop();
+            int brightness = neighborCombineResult.<Int2IntFunction>apply(new BrightnessCombiner<>()).applyAsInt(combinedLightIn);
+
+            boolean trapped = true;
+
+            Material material = new Material(Sheets.CHEST_SHEET, RepairChestModels.chooseChestTexture(chestType));
+
+            VertexConsumer vertexConsumer = material.buffer(bufferIn, RenderType::entityCutout);
+
+            this.render(poseStack, vertexConsumer, this.chestLid, this.chestLock, this.chestBottom, openness, brightness, combinedOverlayIn);
+
+            poseStack.popPose();
         }
     }
 
-    private void handleModelRender(MatrixStack matrixStackIn, IVertexBuilder iVertexBuilder, ModelRenderer firstModel, ModelRenderer secondModel, ModelRenderer thirdModel, float f1, int p_228871_7_, int p_228871_8_) {
-        firstModel.rotateAngleX = -(f1 * ((float) Math.PI / 2F));
-        secondModel.rotateAngleX = firstModel.rotateAngleX;
-        firstModel.render(matrixStackIn, iVertexBuilder, p_228871_7_, p_228871_8_);
-        secondModel.render(matrixStackIn, iVertexBuilder, p_228871_7_, p_228871_8_);
-        thirdModel.render(matrixStackIn, iVertexBuilder, p_228871_7_, p_228871_8_);
+    private void render(PoseStack poseStack, VertexConsumer vertexConsumer, ModelPart lid, ModelPart lock, ModelPart bottom, float openness, int brightness, int combinedOverlayIn) {
+        lid.xRot = -(openness * ((float) Math.PI / 2F));
+        lock.xRot = lid.xRot;
+
+        lid.render(poseStack, vertexConsumer, brightness, combinedOverlayIn);
+        lock.render(poseStack, vertexConsumer, brightness, combinedOverlayIn);
+        bottom.render(poseStack, vertexConsumer, brightness, combinedOverlayIn);
     }
 
+    public static void renderItem(PoseStack matrices, MultiBufferSource buffer, ItemStack item, ModelItem modelItem, float rotation, int light) {
+        // if no stack, skip
+        if (item.isEmpty()) return;
 
+        // start rendering
+        matrices.pushPose();
+        Vector3f center = modelItem.getCenter();
+        matrices.translate(center.x(), center.y(), center.z());
+
+        matrices.mulPose(Axis.YP.rotationDegrees(rotation));
+
+        // scale
+        float scale = modelItem.getSizeScaled();
+        matrices.scale(scale, scale, scale);
+
+        // render the actual item
+        Minecraft.getInstance().getItemRenderer().renderStatic(item, ItemDisplayContext.NONE, light, OverlayTexture.NO_OVERLAY, matrices, buffer, null, 0);
+
+        matrices.popPose();
+    }
 }

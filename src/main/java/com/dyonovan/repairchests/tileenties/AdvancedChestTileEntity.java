@@ -3,17 +3,19 @@ package com.dyonovan.repairchests.tileenties;
 import com.dyonovan.repairchests.blocks.RepairChestBlocks;
 import com.dyonovan.repairchests.blocks.RepairChestTypes;
 import com.dyonovan.repairchests.containers.RepairChestContainer;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.Container;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class AdvancedChestTileEntity extends GenericRepairChestTileEntity {
 
-    public AdvancedChestTileEntity() {
-        super(RepairChestTileEntityTypes.ADVANCED_CHEST.get(), RepairChestTypes.ADVANCED, RepairChestBlocks.ADVANCED_CHEST::get);
+    public AdvancedChestTileEntity(BlockPos blockPos, BlockState blockState) {
+        super(RepairChestTileEntityTypes.ADVANCED_CHEST.get(), blockPos, blockState, RepairChestTypes.ADVANCED, RepairChestBlocks.ADVANCED_CHEST::get);
     }
 
     @Override
-    protected Container createMenu(int id, PlayerInventory playerInventory) {
-        return RepairChestContainer.createAdvancedContainer(id, playerInventory, this);
+    protected AbstractContainerMenu createMenu(int containerID, Inventory playerInventory) {
+        return RepairChestContainer.createAdvancedContainer(containerID, playerInventory, this);
     }
 }

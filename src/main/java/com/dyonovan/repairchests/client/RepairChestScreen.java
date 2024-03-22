@@ -3,52 +3,52 @@ package com.dyonovan.repairchests.client;
 import com.dyonovan.repairchests.blocks.RepairChestTypes;
 import com.dyonovan.repairchests.containers.RepairChestContainer;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gui.IHasContainer;
-import net.minecraft.client.gui.screen.inventory.ContainerScreen;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.MenuAccess;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
 
-public class RepairChestScreen extends ContainerScreen<RepairChestContainer> implements IHasContainer<RepairChestContainer> {
+public class RepairChestScreen extends AbstractContainerScreen<RepairChestContainer> implements MenuAccess<RepairChestContainer> {
 
     private RepairChestTypes chestType;
 
     private int textureXSize;
     private int textureYSize;
 
-    public RepairChestScreen(RepairChestContainer container, PlayerInventory playerInventory, ITextComponent title) {
+    public RepairChestScreen(RepairChestContainer container, Inventory playerInventory, Component title) {
         super(container, playerInventory, title);
 
         this.chestType = container.getChestType();
-        this.xSize = container.getChestType().xSize;
-        this.ySize = container.getChestType().ySize;
+        this.imageWidth = container.getChestType().xSize;
+        this.imageHeight = container.getChestType().ySize;
         this.textureXSize = container.getChestType().textureXSize;
         this.textureYSize = container.getChestType().textureYSize;
-
-        this.passEvents = false;
     }
 
     @Override
-    public void render(int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground();
-        super.render(mouseX, mouseY, partialTicks);
-        this.renderHoveredToolTip(mouseX, mouseY);
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(guiGraphics, mouseX, mouseY, partialTicks);
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
+        this.renderTooltip(guiGraphics, mouseX, mouseY);
     }
 
     @Override
-    protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-        this.font.drawString(this.title.getFormattedText(), 8.0F, 6.0F, 4210752);
-        this.font.drawString(this.playerInventory.getDisplayName().getFormattedText(), 8.0F, (float) (this.ySize - 96 + 2), 4210752);
+    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        guiGraphics.drawString(this.font, this.title, 8, 6, 4210752, false);
+        guiGraphics.drawString(this.font, this.playerInventoryTitle, 8, (this.imageHeight - 96 +2), 4210752, false);
     }
 
     @Override
-    protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+    protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, this.chestType.guiTexture);
 
-        this.minecraft.getTextureManager().bindTexture(this.chestType.guiTexture);
+        int x = (this.width - this.imageWidth) / 2;
+        int y = (this.height - this.imageHeight) / 2;
 
-        int x = (this.width - this.xSize) / 2;
-        int y = (this.height - this.ySize) / 2;
-
-        blit(x, y, 0, 0, this.xSize, this.ySize, this.textureXSize, this.textureYSize);
+        guiGraphics.blit(this.chestType.guiTexture, x, y, 0, 0, this.imageWidth, this.imageHeight, this.textureXSize, this.textureYSize);
     }
 }

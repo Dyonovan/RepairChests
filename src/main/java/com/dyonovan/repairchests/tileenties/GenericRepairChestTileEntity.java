@@ -1,217 +1,131 @@
 package com.dyonovan.repairchests.tileenties;
 
 import com.dyonovan.repairchests.RepairChests;
-import com.dyonovan.repairchests.containers.RepairChestContainer;
-import com.dyonovan.repairchests.blocks.RepairChestTypes;
 import com.dyonovan.repairchests.blocks.GenericRepairChest;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.ItemStackHelper;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.*;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.dyonovan.repairchests.blocks.RepairChestTypes;
+import com.dyonovan.repairchests.containers.RepairChestContainer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.CompoundContainer;
+import net.minecraft.world.Container;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.*;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.function.Supplier;
 
-@OnlyIn(value = Dist.CLIENT, _interface = IChestLid.class)
-public class GenericRepairChestTileEntity extends LockableLootTileEntity implements IChestLid, ITickableTileEntity {
+public abstract class GenericRepairChestTileEntity extends RandomizableContainerBlockEntity implements LidBlockEntity {
 
+    private static final int EVENT_SET_OPEN_COUNT = 1;
     private NonNullList<ItemStack> chestContents;
-    protected float lidAngle;
-    protected float prevLidAngle;
-    protected int numPlayersUsing;
-    private int ticksSinceSync;
+
+    private final ContainerOpenersCounter openersCounter = new ContainerOpenersCounter() {
+        @Override
+        protected void onOpen(Level level, BlockPos blockPos, BlockState blockState) {
+            GenericRepairChestTileEntity.playSound(level, blockPos, blockState, SoundEvents.CHEST_OPEN);
+        }
+
+        @Override
+        protected void onClose(Level level, BlockPos blockPos, BlockState blockState) {
+            GenericRepairChestTileEntity.playSound(level, blockPos, blockState, SoundEvents.CHEST_CLOSE);
+        }
+
+        @Override
+        protected void openerCountChanged(Level level, BlockPos blockPos, BlockState blockState, int i, int i1) {
+            GenericRepairChestTileEntity.this.signalOpenCount(level, blockPos, blockState, i, i1);
+        }
+
+        @Override
+        protected boolean isOwnContainer(Player player) {
+            if (!(player.containerMenu instanceof RepairChestContainer)) {
+                return false;
+            } else {
+                Container container = ((RepairChestContainer) player.containerMenu).getContainer();
+                return container instanceof GenericRepairChestTileEntity || container instanceof CompoundContainer &&
+                        ((CompoundContainer) container).contains(GenericRepairChestTileEntity.this);
+            }
+        }
+    };
+
+    private final ChestLidController chestLidController = new ChestLidController();
+
     private RepairChestTypes chestType;
     private Supplier<Block> blockToUse;
 
     private int tickNum;
 
-    protected GenericRepairChestTileEntity(TileEntityType<?> typeIn, RepairChestTypes chestTypeIn, Supplier<Block> blockToUseIn) {
-        super(typeIn);
+    protected GenericRepairChestTileEntity(BlockEntityType<?> blockEntityType, BlockPos blockPos, BlockState state, RepairChestTypes chestTypeIn, Supplier<Block> blockToUseIn) {
+        super(blockEntityType, blockPos, state);
 
-        this.chestContents = NonNullList.<ItemStack>withSize(chestTypeIn.size, ItemStack.EMPTY);
+        this.chestContents = NonNullList.withSize(chestTypeIn.size, ItemStack.EMPTY);
         this.chestType = chestTypeIn;
         this.blockToUse = blockToUseIn;
     }
 
     @Override
-    public int getSizeInventory() {
+    public int getContainerSize() {
         return this.getItems().size();
     }
 
     @Override
-    public boolean isEmpty() {
-        for (ItemStack itemstack : this.chestContents) {
-            if (!itemstack.isEmpty()) {
-                return false;
-            }
-        }
-        return true;
+    protected Component getDefaultName() {
+        return Component.translatable(RepairChests.MODID + ".container." + this.chestType.getId() + "_chest");
     }
 
     @Override
-    protected ITextComponent getDefaultName() {
-        return new TranslationTextComponent(RepairChests.MODID + ".container."+ this.chestType.getId() + "_chest");
-    }
+    public void load(CompoundTag compound) {
+        super.load(compound);
 
-    @Override
-    public void read(CompoundNBT compound) {
-        super.read(compound);
+        this.chestContents = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
 
-        this.chestContents = NonNullList.withSize(this.getSizeInventory(), ItemStack.EMPTY);
-
-        if (!this.checkLootAndRead(compound)) {
-            ItemStackHelper.loadAllItems(compound, this.chestContents);
+        if (!this.tryLoadLootTable(compound)) {
+            ContainerHelper.loadAllItems(compound, this.chestContents);
         }
     }
 
     @Override
-    public CompoundNBT write(CompoundNBT compound) {
-        super.write(compound);
+    public void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
 
-        if (!this.checkLootAndWrite(compound)) {
-            ItemStackHelper.saveAllItems(compound, this.chestContents);
+        if (!this.trySaveLootTable(tag)) {
+            ContainerHelper.saveAllItems(tag, this.chestContents);
         }
+    }
 
-        return compound;
+    public static void lidAnimateTick(Level level, BlockPos blockPos, BlockState blockState, GenericRepairChestTileEntity chestTileEntity) {
+        chestTileEntity.chestLidController.tickLid();
+    }
+
+    static void playSound(Level level, BlockPos blockPos, BlockState blockState, SoundEvent soundIn) {
+        double d0 = (double) blockPos.getX() + 0.5D;
+        double d1 = (double) blockPos.getY() + 0.5D;
+        double d2 = (double) blockPos.getZ() + 0.5D;
+
+        level.playSound(null, d0, d1, d2, soundIn, SoundSource.BLOCKS, 0.5F, level.random.nextFloat() * 0.1F + 0.9F);
     }
 
     @Override
-    public void tick() {
-        int i = this.pos.getX();
-        int j = this.pos.getY();
-        int k = this.pos.getZ();
-        ++this.ticksSinceSync;
-        this.numPlayersUsing = getNumberOfPlayersUsing(this.world, this, this.ticksSinceSync, i, j, k, this.numPlayersUsing);
-        this.prevLidAngle = this.lidAngle;
-        float f = 0.1F;
-        if (this.numPlayersUsing > 0 && this.lidAngle == 0.0F) {
-            this.playSound(SoundEvents.BLOCK_CHEST_OPEN);
-        }
-
-        if (this.numPlayersUsing == 0 && this.lidAngle > 0.0F || this.numPlayersUsing > 0 && this.lidAngle < 1.0F) {
-            float f1 = this.lidAngle;
-            if (this.numPlayersUsing > 0) {
-                this.lidAngle += 0.1F;
-            }
-            else {
-                this.lidAngle -= 0.1F;
-            }
-
-            if (this.lidAngle > 1.0F) {
-                this.lidAngle = 1.0F;
-            }
-
-            float f2 = 0.5F;
-            if (this.lidAngle < 0.5F && f1 >= 0.5F) {
-                this.playSound(SoundEvents.BLOCK_CHEST_CLOSE);
-            }
-
-            if (this.lidAngle < 0.0F) {
-                this.lidAngle = 0.0F;
-            }
-        }
-
-        // check chest contains and repair if item is repairable
-        ++this.tickNum;
-        int ticktime = chestType == RepairChestTypes.BASIC ? 600 : chestType == RepairChestTypes.ADVANCED ? 400 : chestType == RepairChestTypes.ULTIMATE ? 200 : 600;
-        if (tickNum >= ticktime) {
-            for (int c = 0; c < this.getSizeInventory(); c++) {
-                ItemStack stack = this.getStackInSlot(c);
-
-                //if (!stack.isEmpty() && !stack.isItemEqual(new ItemStack(Items.AIR)) && stack.isRepairable() && stack.getDamage() > 0) {
-                if (!stack.isEmpty() && stack.isRepairable() && stack.getDamage() > 0) {
-                    stack.setDamage(stack.getDamage() - 1);
-                    tickNum = 0;
-                    return;
-                }
-            }
-            tickNum = 0;
-        }
-    }
-
-    public static int getNumberOfPlayersUsing(World worldIn, LockableTileEntity lockableTileEntity, int ticksSinceSync, int x, int y, int z, int numPlayersUsing) {
-        if (!worldIn.isRemote && numPlayersUsing != 0 && (ticksSinceSync + x + y + z) % 200 == 0) {
-            numPlayersUsing = getNumberOfPlayersUsing(worldIn, lockableTileEntity, x, y, z);
-        }
-        return numPlayersUsing;
-    }
-
-    public static int getNumberOfPlayersUsing(World world, LockableTileEntity lockableTileEntity, int x, int y, int z) {
-        int i = 0;
-
-        for (PlayerEntity playerentity : world.getEntitiesWithinAABB(PlayerEntity.class,
-                new AxisAlignedBB((float) x - 5.0F, (float) y - 5.0F, (float) z - 5.0F, (float) (x + 1) + 5.0F,
-                        (float) (y + 1) + 5.0F, (float) (z + 1) + 5.0F))) {
-            if (playerentity.openContainer instanceof RepairChestContainer) {
-                ++i;
-            }
-        }
-        return i;
-    }
-
-    private void playSound(SoundEvent soundIn) {
-        double d0 = (double) this.pos.getX() + 0.5D;
-        double d1 = (double) this.pos.getY() + 0.5D;
-        double d2 = (double) this.pos.getZ() + 0.5D;
-
-        this.world.playSound((PlayerEntity) null, d0, d1, d2, soundIn, SoundCategory.BLOCKS, 0.5F, this.world.rand.nextFloat() * 0.1F + 0.9F);
-    }
-
-    @Override
-    public boolean receiveClientEvent(int id, int type) {
-        if (id == 1) {
-            this.numPlayersUsing = type;
-            return true;
-        }
-        else {
-            return super.receiveClientEvent(id, type);
+    public void startOpen(Player player) {
+        if (!this.remove && !player.isSpectator()) {
+            this.openersCounter.incrementOpeners(player, this.getLevel(), this.getBlockPos(), this.getBlockState());
         }
     }
 
     @Override
-    public void openInventory(PlayerEntity player) {
-        if (!player.isSpectator()) {
-            if (this.numPlayersUsing < 0) {
-                this.numPlayersUsing = 0;
-            }
-
-            ++this.numPlayersUsing;
-            this.onOpenOrClose();
-        }
-    }
-
-    @Override
-    public void closeInventory(PlayerEntity player) {
-        if (!player.isSpectator()) {
-            --this.numPlayersUsing;
-            this.onOpenOrClose();
-        }
-    }
-
-    protected void onOpenOrClose() {
-        Block block = this.getBlockState().getBlock();
-
-        if (block instanceof GenericRepairChest) {
-            this.world.addBlockEvent(this.pos, block, 1, this.numPlayersUsing);
-            this.world.notifyNeighborsOfStateChange(this.pos, block);
+    public void stopOpen(Player player) {
+        if (!this.remove && !player.isSpectator()) {
+            this.openersCounter.decrementOpeners(player, this.getLevel(), this.getBlockPos(), this.getBlockState());
         }
     }
 
@@ -222,7 +136,7 @@ public class GenericRepairChestTileEntity extends LockableLootTileEntity impleme
 
     @Override
     public void setItems(NonNullList<ItemStack> itemsIn) {
-        this.chestContents = NonNullList.<ItemStack>withSize(this.getChestType().size, ItemStack.EMPTY);
+        this.chestContents = NonNullList.withSize(this.getChestType().size, ItemStack.EMPTY);
 
         for (int i = 0; i < itemsIn.size(); i++) {
             if (i < this.chestContents.size()) {
@@ -232,26 +146,32 @@ public class GenericRepairChestTileEntity extends LockableLootTileEntity impleme
     }
 
     @Override
-    @OnlyIn(Dist.CLIENT)
-    public float getLidAngle(float partialTicks) {
-        return MathHelper.lerp(partialTicks, this.prevLidAngle, this.lidAngle);
+    public float getOpenNess(float partialTicks) {
+        return this.chestLidController.getOpenness(partialTicks);
     }
 
-    public static int getPlayersUsing(IBlockReader reader, BlockPos posIn) {
-        BlockState blockstate = reader.getBlockState(posIn);
-        if (blockstate.hasTileEntity()) {
-            TileEntity tileentity = reader.getTileEntity(posIn);
-            if (tileentity instanceof GenericRepairChestTileEntity) {
-                return ((GenericRepairChestTileEntity) tileentity).numPlayersUsing;
+    public static int getOpenCount(BlockGetter blockGetter, BlockPos blockPos) {
+        BlockState blockstate = blockGetter.getBlockState(blockPos);
+
+        if (blockstate.hasBlockEntity()) {
+            BlockEntity blockentity = blockGetter.getBlockEntity(blockPos);
+
+            if (blockentity instanceof GenericRepairChestTileEntity) {
+                return ((GenericRepairChestTileEntity) blockentity).openersCounter.getOpenerCount();
             }
         }
-
         return 0;
     }
 
-    @Override
-    protected Container createMenu(int windowId, PlayerInventory playerInventory) {
-        return RepairChestContainer.createBasicContainer(windowId, playerInventory, this);
+    public void recheckOpen() {
+        if (!this.remove) {
+            this.openersCounter.recheckOpeners(this.getLevel(), this.getBlockPos(), this.getBlockState());
+        }
+    }
+
+    protected void signalOpenCount(Level level, BlockPos blockPos, BlockState blockState, int previousCount, int newCount) {
+        Block block = blockState.getBlock();
+        level.blockEvent(blockPos, block, 1, newCount);
     }
 
     public void wasPlaced(LivingEntity livingEntity, ItemStack stack) {
@@ -263,7 +183,7 @@ public class GenericRepairChestTileEntity extends LockableLootTileEntity impleme
     public RepairChestTypes getChestType() {
         RepairChestTypes type = RepairChestTypes.BASIC;
 
-        if (this.hasWorld()) {
+        if (this.hasLevel()) {
             RepairChestTypes typeFromBlock = GenericRepairChest.getTypeFromBlock(this.getBlockState().getBlock());
 
             if (typeFromBlock != null) {
@@ -276,4 +196,24 @@ public class GenericRepairChestTileEntity extends LockableLootTileEntity impleme
     public Block getBlockToUse() {
         return this.blockToUse.get();
     }
+
+    public static void tick(Level level, BlockPos blockPos, BlockState blockState, GenericRepairChestTileEntity blockEntity) {
+        // check chest contains and repair if item is repairable
+        ++blockEntity.tickNum;
+        int ticktime = blockEntity.chestType == RepairChestTypes.BASIC ? 600 : blockEntity.chestType == RepairChestTypes.ADVANCED ? 400 : blockEntity.chestType == RepairChestTypes.ULTIMATE ? 200 : 600;
+        if (blockEntity.tickNum >= ticktime) {
+            for (int c = 0; c < blockEntity.getContainerSize(); c++) {
+                ItemStack stack = blockEntity.getItem(c);
+
+                if (!stack.isEmpty() && stack.isRepairable() && stack.getDamageValue() > 0) {
+                    stack.setDamageValue(stack.getDamageValue() - 1);
+                    blockEntity.tickNum = 0;
+                    return;
+                }
+            }
+            blockEntity.tickNum = 0;
+        }
+    }
+
+
 }

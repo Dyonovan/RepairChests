@@ -1,6 +1,7 @@
 package com.dyonovan.repairchests.items;
 
 import com.dyonovan.repairchests.RepairChests;
+import com.google.common.collect.ImmutableMap;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;

@@ -2,18 +2,30 @@ package com.dyonovan.repairchests.blocks;
 
 import com.dyonovan.repairchests.tileenties.BasicChestTileEntity;
 import com.dyonovan.repairchests.tileenties.RepairChestTileEntityTypes;
-import net.minecraft.block.BlockState;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.IBlockReader;
+import com.mojang.serialization.MapCodec;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+
+import javax.annotation.Nullable;
 
 public class BasicChestBlock extends GenericRepairChest {
 
+    public static final MapCodec<BasicChestBlock> CODEC = simpleCodec(BasicChestBlock::new);
+
     public BasicChestBlock(Properties properties) {
-        super(RepairChestTypes.BASIC, RepairChestTileEntityTypes.BASIC_CHEST::get, properties);
+        super(properties, RepairChestTileEntityTypes.BASIC_CHEST::get, RepairChestTypes.BASIC);
+    }
+
+    @Nullable
+    @Override
+    public BlockEntity newBlockEntity(BlockPos blockPos, BlockState blockState) {
+        return new BasicChestTileEntity(blockPos, blockState);
     }
 
     @Override
-    public TileEntity createTileEntity(BlockState state, IBlockReader world) {
-        return new BasicChestTileEntity();
+    protected MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
     }
 }

@@ -1,67 +1,66 @@
 package com.dyonovan.repairchests.containers;
 
 import com.dyonovan.repairchests.blocks.RepairChestTypes;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.ContainerType;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class RepairChestContainer extends Container {
+public class RepairChestContainer extends AbstractContainerMenu {
 
-    private final IInventory inventory;
+    private final Container container;
 
     private final RepairChestTypes chestType;
 
-    private RepairChestContainer(ContainerType<?> containerType, int windowId, PlayerInventory playerInventory) {
-        this(containerType, windowId, playerInventory, new Inventory(RepairChestTypes.BASIC.size), RepairChestTypes.BASIC);
+    private RepairChestContainer(MenuType<?> containerType, int windowId, Inventory playerInventory) {
+        this(containerType, windowId, playerInventory, new SimpleContainer(RepairChestTypes.BASIC.size), RepairChestTypes.BASIC);
     }
 
-    public static RepairChestContainer createBasicContainer(int windowId, PlayerInventory playerInventory) {
-        return new RepairChestContainer(RepairChestsContainerTypes.BASIC_CHEST.get(), windowId, playerInventory, new Inventory(RepairChestTypes.BASIC.size), RepairChestTypes.BASIC);
+    public static RepairChestContainer createBasicContainer(int windowId, Inventory playerInventory) {
+        return new RepairChestContainer(RepairChestsContainerTypes.BASIC_CHEST.get(), windowId, playerInventory, new SimpleContainer(RepairChestTypes.BASIC.size), RepairChestTypes.BASIC);
     }
 
-    public static RepairChestContainer createBasicContainer(int windowId, PlayerInventory playerInventory, IInventory inventory) {
+    public static RepairChestContainer createBasicContainer(int windowId, Inventory playerInventory, Container inventory) {
         return new RepairChestContainer(RepairChestsContainerTypes.BASIC_CHEST.get(), windowId, playerInventory, inventory, RepairChestTypes.BASIC);
     }
 
-    public static RepairChestContainer createAdvancedContainer(int windowId, PlayerInventory playerInventory) {
-        return new RepairChestContainer(RepairChestsContainerTypes.ADVANCED_CHEST.get(), windowId, playerInventory, new Inventory(RepairChestTypes.ADVANCED.size), RepairChestTypes.ADVANCED);
+    public static RepairChestContainer createAdvancedContainer(int windowId, Inventory playerInventory) {
+        return new RepairChestContainer(RepairChestsContainerTypes.ADVANCED_CHEST.get(), windowId, playerInventory, new SimpleContainer(RepairChestTypes.ADVANCED.size), RepairChestTypes.ADVANCED);
     }
 
-    public static RepairChestContainer createAdvancedContainer(int windowId, PlayerInventory playerInventory, IInventory inventory) {
+    public static RepairChestContainer createAdvancedContainer(int windowId, Inventory playerInventory, Container inventory) {
         return new RepairChestContainer(RepairChestsContainerTypes.ADVANCED_CHEST.get(), windowId, playerInventory, inventory, RepairChestTypes.ADVANCED);
     }
 
-    public static RepairChestContainer createUltimateContainer(int windowId, PlayerInventory playerInventory) {
-        return new RepairChestContainer(RepairChestsContainerTypes.ULTIMATE_CHEST.get(), windowId, playerInventory, new Inventory(RepairChestTypes.ULTIMATE.size), RepairChestTypes.ULTIMATE);
+    public static RepairChestContainer createUltimateContainer(int windowId, Inventory playerInventory) {
+        return new RepairChestContainer(RepairChestsContainerTypes.ULTIMATE_CHEST.get(), windowId, playerInventory, new SimpleContainer(RepairChestTypes.ULTIMATE.size), RepairChestTypes.ULTIMATE);
     }
 
-    public static RepairChestContainer createUltimateContainer(int windowId, PlayerInventory playerInventory, IInventory inventory) {
+    public static RepairChestContainer createUltimateContainer(int windowId, Inventory playerInventory, Container inventory) {
         return new RepairChestContainer(RepairChestsContainerTypes.ULTIMATE_CHEST.get(), windowId, playerInventory, inventory, RepairChestTypes.ULTIMATE);
     }
 
-    public RepairChestContainer(ContainerType<?> containerType, int windowId, PlayerInventory playerInventory, IInventory inventory, RepairChestTypes chestTypes) {
+    public RepairChestContainer(MenuType<?> containerType, int windowId, Inventory playerInventory, Container container, RepairChestTypes chestTypes) {
         super(containerType, windowId);
-        assertInventorySize(inventory, chestTypes.size);
+        checkContainerSize(container, chestTypes.size);
 
-        this.inventory = inventory;
+        this.container = container;
         this.chestType = chestTypes;
 
-        inventory.openInventory(playerInventory.player);
+       container.startOpen(playerInventory.player);
 
         if (chestType == RepairChestTypes.BASIC) {
-            this.addSlot(new Slot(inventory, 0, 12 + 4 * 18, 8 + 2 * 18));
+            this.addSlot(new Slot(container, 0, 12 + 4 * 18, 8 + 2 * 18));
         } else {
-
             for (int chestRow = 0; chestRow < chestType.getRowCount(); chestRow++) {
                 for (int chestCol = 0; chestCol < chestType.rowLength; chestCol++) {
-                    this.addSlot(new Slot(inventory, chestCol + chestRow * chestType.rowLength, 12 + chestCol * 18, 18 + chestRow * 18));
+                    this.addSlot(new Slot(container, chestCol + chestRow * chestType.rowLength, 12 + chestCol * 18, 18 + chestRow * 18));
                 }
             }
         }
@@ -81,42 +80,46 @@ public class RepairChestContainer extends Container {
     }
 
     @Override
-    public boolean canInteractWith(PlayerEntity playerIn) {
-        return this.inventory.isUsableByPlayer(playerIn);
+    public boolean stillValid(Player playerIn) {
+        return this.container.stillValid(playerIn);
     }
 
     @Override
-    public ItemStack transferStackInSlot(PlayerEntity playerIn, int index) {
+    public ItemStack quickMoveStack(Player playerIn, int index) {
         ItemStack itemstack = ItemStack.EMPTY;
-        Slot slot = this.inventorySlots.get(index);
+        Slot slot = this.slots.get(index);
 
-        if (slot != null && slot.getHasStack()) {
-            ItemStack itemstack1 = slot.getStack();
+        if (slot != null && slot.hasItem()) {
+            ItemStack itemstack1 = slot.getItem();
             itemstack = itemstack1.copy();
 
             if (index < this.chestType.size) {
-                if (!this.mergeItemStack(itemstack1, this.chestType.size, this.inventorySlots.size(), true)) {
+                if (!this.moveItemStackTo(itemstack1, this.chestType.size, this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
             }
-            else if (!this.mergeItemStack(itemstack1, 0, this.chestType.size, false)) {
+            else if (!this.moveItemStackTo(itemstack1, 0, this.chestType.size, false)) {
                 return ItemStack.EMPTY;
             }
 
             if (itemstack1.isEmpty()) {
-                slot.putStack(ItemStack.EMPTY);
+                slot.set(ItemStack.EMPTY);
             }
             else {
-                slot.onSlotChanged();
+                slot.setChanged();
             }
         }
         return itemstack;
     }
 
     @Override
-    public void onContainerClosed(PlayerEntity playerIn) {
-        super.onContainerClosed(playerIn);
-        this.inventory.closeInventory(playerIn);
+    public void removed(Player playerIn) {
+        super.removed(playerIn);
+        this.container.stopOpen(playerIn);
+    }
+
+    public Container getContainer() {
+        return this.container;
     }
 
     @OnlyIn(Dist.CLIENT)

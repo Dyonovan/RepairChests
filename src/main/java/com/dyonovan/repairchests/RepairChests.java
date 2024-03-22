@@ -32,16 +32,14 @@ import org.apache.logging.log4j.Logger;
 public class RepairChests {
     public static final String MODID = "repairchests";
 
-    public static final Logger LOGGER = LogManager.getLogger();
-
-    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
+    /*public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
 
     public static final RegistryObject<CreativeModeTab> EXAMPLE_TAB = CREATIVE_MODE_TABS.register(MODID, () -> CreativeModeTab.builder()
             .withTabsBefore(CreativeModeTabs.COMBAT)
             .icon(() -> EXAMPLE_ITEM.get().getDefaultInstance())
             .displayItems((parameters, output) -> {
                 output.accept(EXAMPLE_ITEM.get());
-            }).build());
+            }).build());*/
 
     public RepairChests() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -57,6 +55,7 @@ public class RepairChests {
         RepairChestItems.ITEMS.register(modBus);
         RepairChestTileEntityTypes.TILE_ENTITIES.register(modBus);
         RepairChestsContainerTypes.CONTAINERS.register(modBus);
+        RepairChestCreativeTabs.CREATIVE_MODE_TABS.register(modBus);
     }
 
     @OnlyIn(Dist.CLIENT)

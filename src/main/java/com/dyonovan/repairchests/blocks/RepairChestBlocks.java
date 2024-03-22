@@ -30,7 +30,7 @@ public class RepairChestBlocks {
             () -> new UltimateChestBlock(Block.Properties.of().mapColor(MapColor.METAL).strength(3.0F)), RepairChestTypes.ULTIMATE);
 
     private static <T extends Block> RegistryObject<T> register(String name, Supplier<? extends T> sup, RepairChestTypes chestType) {
-        return register(name, sup, block -> item(block, () -> () -> chestType));
+        return register(name, sup, block -> item(block, () -> () -> chestType, () -> () -> true));
     }
 
     private static <T extends Block> RegistryObject<T> register(String name, Supplier<? extends T> sup, Function<RegistryObject<T>, Supplier<? extends Item>> itemCreator) {
@@ -43,7 +43,7 @@ public class RepairChestBlocks {
         return BLOCKS.register(name, sup);
     }
 
-    private static Supplier<BlockItem> item(final RegistryObject<? extends Block> block, Supplier<Callable<RepairChestTypes>> chestType) {
-        return () -> new RepairChestBlockItem(block.get(), new Item.Properties(), chestType);
+    private static Supplier<BlockItem> item(final RegistryObject<? extends Block> block, Supplier<Callable<RepairChestTypes>> chestType, Supplier<Callable<Boolean>> trapped) {
+        return () -> new RepairChestBlockItem(block.get(), new Item.Properties(), chestType, trapped);
     }
 }
