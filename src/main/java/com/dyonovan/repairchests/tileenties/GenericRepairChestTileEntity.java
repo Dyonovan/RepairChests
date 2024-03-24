@@ -116,6 +116,16 @@ public abstract class GenericRepairChestTileEntity extends RandomizableContainer
     }
 
     @Override
+    public boolean triggerEvent(int id, int type) {
+        if (id == 1) {
+            this.chestLidController.shouldBeOpen(type > 0);
+            return true;
+        } else {
+            return super.triggerEvent(id, type);
+        }
+    }
+
+    @Override
     public void startOpen(Player player) {
         if (!this.remove && !player.isSpectator()) {
             this.openersCounter.incrementOpeners(player, this.getLevel(), this.getBlockPos(), this.getBlockState());
@@ -213,6 +223,8 @@ public abstract class GenericRepairChestTileEntity extends RandomizableContainer
             }
             blockEntity.tickNum = 0;
         }
+
+        blockEntity.chestLidController.tickLid();
     }
 
 

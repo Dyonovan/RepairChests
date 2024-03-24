@@ -16,5 +16,11 @@ public class RepairChestLangProvider extends LanguageProvider {
         this.addBlock(RepairChestBlocks.BASIC_CHEST, "Basic Chest");
         this.addBlock(RepairChestBlocks.ADVANCED_CHEST, "Advanced Chest");
         this.addBlock(RepairChestBlocks.ULTIMATE_CHEST, "Ultimate Chest");
+
+        this.add("itemGroup.repairchest", "Repair Chests");
+
+        this.add("repairchests.container.basic_chest", "Basic Repair Chest");
+        this.add("repairchests.container.advanced_chest", "Advanced Repair Chest");
+        this.add("repairchests.container.ultimate_chest", "Ultimate Repair Chest");
     }
 }

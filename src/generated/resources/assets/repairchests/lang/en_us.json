@@ -1,0 +1,9 @@
+{
+  "block.repairchests.advanced_chest": "Advanced Chest",
+  "block.repairchests.basic_chest": "Basic Chest",
+  "block.repairchests.ultimate_chest": "Ultimate Chest",
+  "itemGroup.repairchest": "Repair Chests",
+  "repairchests.container.advanced_chest": "Advanced Repair Chest",
+  "repairchests.container.basic_chest": "Basic Repair Chest",
+  "repairchests.container.ultimate_chest": "Ultimate Repair Chest"
+}

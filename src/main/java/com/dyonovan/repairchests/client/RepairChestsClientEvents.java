@@ -12,7 +12,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = RepairChests.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class RepairChestsClientEvents {
 
-    public static final ModelLayerLocation REPAIR_CHEST = new ModelLayerLocation(new ResourceLocation(RepairChests.MODID, "repair_chest"), "main");
+    public static final ModelLayerLocation REPAIR_CHEST = new ModelLayerLocation(new ResourceLocation(RepairChests.MODID, "basic_chest"), "main");
 
     @SubscribeEvent
     public static void layerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {

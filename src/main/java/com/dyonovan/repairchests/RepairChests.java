@@ -3,6 +3,7 @@ package com.dyonovan.repairchests;
 import com.dyonovan.repairchests.blocks.RepairChestBlocks;
 import com.dyonovan.repairchests.client.RepairChestLangProvider;
 import com.dyonovan.repairchests.client.RepairChestScreen;
+import com.dyonovan.repairchests.client.RepairChestsLootTableProvider;
 import com.dyonovan.repairchests.client.renderers.RepairChestTileEntityRenderer;
 import com.dyonovan.repairchests.containers.RepairChestsContainerTypes;
 import com.dyonovan.repairchests.items.RepairChestItems;
@@ -16,6 +17,7 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
@@ -76,7 +78,12 @@ public class RepairChests {
     private void gatherData(GatherDataEvent event) {
         DataGenerator generator = event.getGenerator();
         PackOutput packOutput = generator.getPackOutput();
+        ExistingFileHelper ext = event.getExistingFileHelper();
+
+        generator.addProvider(event.includeServer(), new RepairChestsLootTableProvider(packOutput));
 
         generator.addProvider(event.includeClient(), new RepairChestLangProvider(packOutput, "en_us"));
+        generator.addProvider(event.includeClient(), new SpriteSourceProvider(packOutput, ext));
+
     }
 }
