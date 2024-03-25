@@ -4,6 +4,7 @@ import com.dyonovan.repairchests.RepairChests;
 import com.dyonovan.repairchests.blocks.GenericRepairChest;
 import com.dyonovan.repairchests.blocks.RepairChestTypes;
 import com.dyonovan.repairchests.containers.RepairChestContainer;
+import com.dyonovan.repairchests.providers.RepairChestsConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
@@ -23,6 +24,8 @@ import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.function.Supplier;
+
+import static com.dyonovan.repairchests.blocks.RepairChestTypes.*;
 
 public abstract class GenericChestBlockEntity extends RandomizableContainerBlockEntity implements LidBlockEntity {
 
@@ -62,6 +65,7 @@ public abstract class GenericChestBlockEntity extends RandomizableContainerBlock
     private final Supplier<Block> blockToUse;
 
     private int tickNum;
+    private final int tickTime;
 
     protected GenericChestBlockEntity(BlockEntityType<?> blockEntityType, BlockPos blockPos, BlockState state, RepairChestTypes chestTypeIn, Supplier<Block> blockToUseIn) {
         super(blockEntityType, blockPos, state);
@@ -69,6 +73,12 @@ public abstract class GenericChestBlockEntity extends RandomizableContainerBlock
         this.chestContents = NonNullList.withSize(chestTypeIn.size, ItemStack.EMPTY);
         this.chestType = chestTypeIn;
         this.blockToUse = blockToUseIn;
+
+        this.tickTime = switch (chestTypeIn) {
+            case BASIC -> RepairChestsConfig.GENERAL.basicRepairTime.get() * 20;
+            case ADVANCED -> RepairChestsConfig.GENERAL.advancedRepairTime.get() * 20;
+            case ULTIMATE -> RepairChestsConfig.GENERAL.ultimateRepairTime.get() * 20;
+        };
     }
 
     @Override
@@ -172,7 +182,7 @@ public abstract class GenericChestBlockEntity extends RandomizableContainerBlock
     }
 
     public RepairChestTypes getChestType() {
-        RepairChestTypes type = RepairChestTypes.BASIC;
+        RepairChestTypes type = BASIC;
 
         if (this.hasLevel()) {
             RepairChestTypes typeFromBlock = GenericRepairChest.getTypeFromBlock(this.getBlockState().getBlock());
@@ -189,10 +199,9 @@ public abstract class GenericChestBlockEntity extends RandomizableContainerBlock
     }
 
     public static void tick(Level level, BlockPos blockPos, BlockState blockState, GenericChestBlockEntity blockEntity) {
-        // check chest contains and repair if item is repairable
+        
         ++blockEntity.tickNum;
-        int ticktime = blockEntity.chestType == RepairChestTypes.BASIC ? 600 : blockEntity.chestType == RepairChestTypes.ADVANCED ? 400 : blockEntity.chestType == RepairChestTypes.ULTIMATE ? 200 : 600;
-        if (blockEntity.tickNum >= ticktime) {
+        if (blockEntity.tickNum >= blockEntity.tickTime) {
             for (int c = 0; c < blockEntity.getContainerSize(); c++) {
                 ItemStack stack = blockEntity.getItem(c);
 

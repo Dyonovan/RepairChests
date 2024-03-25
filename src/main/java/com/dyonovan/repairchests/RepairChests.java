@@ -1,15 +1,12 @@
 package com.dyonovan.repairchests;
 
 import com.dyonovan.repairchests.blocks.RepairChestBlocks;
-import com.dyonovan.repairchests.providers.RepairChestCreativeTabs;
-import com.dyonovan.repairchests.providers.RepairChestLangProvider;
+import com.dyonovan.repairchests.providers.*;
 import com.dyonovan.repairchests.client.RepairChestScreen;
-import com.dyonovan.repairchests.providers.RepairChestsLootTableProvider;
 import com.dyonovan.repairchests.client.renderers.RepairChestBlockEntityRenderer;
 import com.dyonovan.repairchests.containers.RepairChestsContainerTypes;
 import com.dyonovan.repairchests.items.RepairChestItems;
 import com.dyonovan.repairchests.blockentities.RepairChestBlockEntityTypes;
-import com.dyonovan.repairchests.providers.SpriteSourceProvider;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.data.DataGenerator;
@@ -20,7 +17,9 @@ import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -53,6 +52,8 @@ public class RepairChests {
         RepairChestBlockEntityTypes.TILE_ENTITIES.register(modBus);
         RepairChestsContainerTypes.CONTAINERS.register(modBus);
         RepairChestCreativeTabs.CREATIVE_MODE_TABS.register(modBus);
+
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, RepairChestsConfig.SPEC);
     }
 
     @OnlyIn(Dist.CLIENT)
