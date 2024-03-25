@@ -2,10 +2,10 @@ package com.dyonovan.repairchests.blocks;
 
 import com.dyonovan.repairchests.RepairChests;
 import com.dyonovan.repairchests.Util;
-import com.dyonovan.repairchests.tileenties.AdvancedChestTileEntity;
-import com.dyonovan.repairchests.tileenties.BasicChestTileEntity;
-import com.dyonovan.repairchests.tileenties.GenericRepairChestTileEntity;
-import com.dyonovan.repairchests.tileenties.UltimateChestTileEntity;
+import com.dyonovan.repairchests.blockentities.AdvancedChestBlockEntity;
+import com.dyonovan.repairchests.blockentities.BasicChestBlockEntity;
+import com.dyonovan.repairchests.blockentities.GenericChestBlockEntity;
+import com.dyonovan.repairchests.blockentities.UltimateChestBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
@@ -72,11 +72,11 @@ public enum RepairChestTypes implements StringRepresentable {
         };
     }
 
-    public GenericRepairChestTileEntity makeEntity(BlockPos blockPos, BlockState blockState) {
+    public GenericChestBlockEntity makeEntity(BlockPos blockPos, BlockState blockState) {
         return switch (this) {
-            case BASIC -> new BasicChestTileEntity(blockPos, blockState);
-            case ADVANCED -> new AdvancedChestTileEntity(blockPos, blockState);
-            case ULTIMATE -> new UltimateChestTileEntity(blockPos, blockState);
+            case BASIC -> new BasicChestBlockEntity(blockPos, blockState);
+            case ADVANCED -> new AdvancedChestBlockEntity(blockPos, blockState);
+            case ULTIMATE -> new UltimateChestBlockEntity(blockPos, blockState);
             default -> null;
         };
     }

@@ -1,4 +1,4 @@
-package com.dyonovan.repairchests.client;
+package com.dyonovan.repairchests.providers;
 
 import com.dyonovan.repairchests.blocks.RepairChestBlocks;
 import net.minecraft.data.loot.BlockLootSubProvider;

@@ -1,4 +1,4 @@
-package com.dyonovan.repairchests.tileenties;
+package com.dyonovan.repairchests.blockentities;
 
 import com.dyonovan.repairchests.blocks.RepairChestBlocks;
 import com.dyonovan.repairchests.blocks.RepairChestTypes;
@@ -8,10 +8,10 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class BasicChestTileEntity extends GenericRepairChestTileEntity {
+public class BasicChestBlockEntity extends GenericChestBlockEntity {
 
-    public BasicChestTileEntity(BlockPos blockPos, BlockState blockState) {
-        super(RepairChestTileEntityTypes.BASIC_CHEST.get(), blockPos, blockState, RepairChestTypes.BASIC, RepairChestBlocks.BASIC_CHEST::get);
+    public BasicChestBlockEntity(BlockPos blockPos, BlockState blockState) {
+        super(RepairChestBlockEntityTypes.BASIC_CHEST.get(), blockPos, blockState, RepairChestTypes.BASIC, RepairChestBlocks.BASIC_CHEST::get);
     }
 
     @Override

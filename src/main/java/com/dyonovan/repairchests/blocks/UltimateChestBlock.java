@@ -1,7 +1,7 @@
 package com.dyonovan.repairchests.blocks;
 
-import com.dyonovan.repairchests.tileenties.RepairChestTileEntityTypes;
-import com.dyonovan.repairchests.tileenties.UltimateChestTileEntity;
+import com.dyonovan.repairchests.blockentities.RepairChestBlockEntityTypes;
+import com.dyonovan.repairchests.blockentities.UltimateChestBlockEntity;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.BaseEntityBlock;
@@ -15,13 +15,13 @@ public class UltimateChestBlock extends GenericRepairChest {
     public static final MapCodec<UltimateChestBlock> CODEC = simpleCodec(UltimateChestBlock::new);
 
     public UltimateChestBlock(Properties properties) {
-        super(properties, RepairChestTileEntityTypes.ULTIMATE_CHEST::get, RepairChestTypes.ULTIMATE);
+        super(properties, RepairChestBlockEntityTypes.ULTIMATE_CHEST::get, RepairChestTypes.ULTIMATE);
     }
 
     @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos blockPos, BlockState blockState) {
-        return new UltimateChestTileEntity(blockPos, blockState);
+        return new UltimateChestBlockEntity(blockPos, blockState);
     }
 
     @Override

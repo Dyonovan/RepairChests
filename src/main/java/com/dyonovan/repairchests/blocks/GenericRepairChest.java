@@ -1,6 +1,6 @@
 package com.dyonovan.repairchests.blocks;
 
-import com.dyonovan.repairchests.tileenties.GenericRepairChestTileEntity;
+import com.dyonovan.repairchests.blockentities.GenericChestBlockEntity;
 import it.unimi.dsi.fastutil.floats.Float2FloatFunction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -14,7 +14,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Cat;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
@@ -54,16 +53,16 @@ public abstract class GenericRepairChest extends BaseEntityBlock implements Simp
     protected static final VoxelShape CHEST_SHAPE = Block.box(1.0D, 0.0D, 1.0D, 15.0D, 14.0D, 15.0D);
 
     private final RepairChestTypes type;
-    private final Supplier<BlockEntityType<? extends GenericRepairChestTileEntity>> tileEntityTypeSupplier;
+    private final Supplier<BlockEntityType<? extends GenericChestBlockEntity>> blockEntityTypeSupplier;
 
-    private static final DoubleBlockCombiner.Combiner<GenericRepairChestTileEntity, Optional<Container>> CHEST_COMBINER = new DoubleBlockCombiner.Combiner<GenericRepairChestTileEntity, Optional<Container>>() {
+    private static final DoubleBlockCombiner.Combiner<GenericChestBlockEntity, Optional<Container>> CHEST_COMBINER = new DoubleBlockCombiner.Combiner<GenericChestBlockEntity, Optional<Container>>() {
         @Override
-        public Optional<Container> acceptDouble(GenericRepairChestTileEntity be1, GenericRepairChestTileEntity be2) {
-            return Optional.of(new CompoundContainer(be1, be2));
+        public Optional<Container> acceptDouble(GenericChestBlockEntity blockEntity1, GenericChestBlockEntity blockEntity2) {
+            return Optional.of(new CompoundContainer(blockEntity1, blockEntity2));
         }
 
         @Override
-        public Optional<Container> acceptSingle(GenericRepairChestTileEntity blockEntity) {
+        public Optional<Container> acceptSingle(GenericChestBlockEntity blockEntity) {
             return Optional.of(blockEntity);
         }
 
@@ -73,14 +72,14 @@ public abstract class GenericRepairChest extends BaseEntityBlock implements Simp
         }
     };
 
-    private static final DoubleBlockCombiner.Combiner<GenericRepairChestTileEntity, Optional<MenuProvider>> MENU_PROVIDER_COMBINER = new DoubleBlockCombiner.Combiner<GenericRepairChestTileEntity, Optional<MenuProvider>>() {
+    private static final DoubleBlockCombiner.Combiner<GenericChestBlockEntity, Optional<MenuProvider>> MENU_PROVIDER_COMBINER = new DoubleBlockCombiner.Combiner<>() {
         @Override
-        public Optional<MenuProvider> acceptDouble(GenericRepairChestTileEntity blockEntity1, GenericRepairChestTileEntity blockEntity2) {
+        public Optional<MenuProvider> acceptDouble(GenericChestBlockEntity blockEntity1, GenericChestBlockEntity blockEntity2) {
             return Optional.empty();
         }
 
         @Override
-        public Optional<MenuProvider> acceptSingle(GenericRepairChestTileEntity blockEntity) {
+        public Optional<MenuProvider> acceptSingle(GenericChestBlockEntity blockEntity) {
             return Optional.of(blockEntity);
         }
 
@@ -90,11 +89,11 @@ public abstract class GenericRepairChest extends BaseEntityBlock implements Simp
         }
     };
 
-    public GenericRepairChest(BlockBehaviour.Properties properties, Supplier<BlockEntityType<? extends GenericRepairChestTileEntity>> tileEntityTypeSupplierIn, RepairChestTypes typeIn) {
+    public GenericRepairChest(BlockBehaviour.Properties properties, Supplier<BlockEntityType<? extends GenericChestBlockEntity>> blockEntityTypeSupplier, RepairChestTypes chestType) {
         super(properties);
 
-        this.type = typeIn;
-        this.tileEntityTypeSupplier = tileEntityTypeSupplierIn;
+        this.type = chestType;
+        this.blockEntityTypeSupplier = blockEntityTypeSupplier;
 
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(WATERLOGGED, Boolean.FALSE));
     }
@@ -109,16 +108,16 @@ public abstract class GenericRepairChest extends BaseEntityBlock implements Simp
     }
 
     @Override
-    public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor worldIn, BlockPos currentPos, BlockPos facingPos) {
+    public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor level, BlockPos currentPos, BlockPos facingPos) {
         if (stateIn.getValue(WATERLOGGED)) {
-            worldIn.scheduleTick(currentPos, Fluids.WATER, Fluids.WATER.getTickDelay(worldIn));
+            level.scheduleTick(currentPos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
 
-        return super.updateShape(stateIn, facing, facingState, worldIn, currentPos, facingPos);
+        return super.updateShape(stateIn, facing, facingState, level, currentPos, facingPos);
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return CHEST_SHAPE;
     }
 
@@ -140,38 +139,38 @@ public abstract class GenericRepairChest extends BaseEntityBlock implements Simp
     }
 
     @Override
-    public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
-        BlockEntity tileEntity = worldIn.getBlockEntity(pos);
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+        BlockEntity tileEntity = level.getBlockEntity(pos);
 
-        if (tileEntity instanceof GenericRepairChestTileEntity) {
-            ((GenericRepairChestTileEntity) tileEntity).wasPlaced(placer, stack);
+        if (tileEntity instanceof GenericChestBlockEntity) {
+            ((GenericChestBlockEntity) tileEntity).wasPlaced(placer, stack);
         }
 
         if (stack.hasCustomHoverName()) {
-            ((GenericRepairChestTileEntity) tileEntity).setCustomName(stack.getHoverName());
+            ((GenericChestBlockEntity) tileEntity).setCustomName(stack.getHoverName());
         }
     }
 
     @Override
-    public void onRemove(BlockState state, Level worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock())) {
-            BlockEntity tileEntity = worldIn.getBlockEntity(pos);
-            if (tileEntity instanceof GenericRepairChestTileEntity) {
-                ((GenericRepairChestTileEntity) tileEntity).removeAdornments();
+            BlockEntity tileEntity = level.getBlockEntity(pos);
+            if (tileEntity instanceof GenericChestBlockEntity) {
+                ((GenericChestBlockEntity) tileEntity).removeAdornments();
 
-                Containers.dropContents(worldIn, pos, (GenericRepairChestTileEntity) tileEntity);
-                worldIn.updateNeighbourForOutputSignal(pos, this);
+                Containers.dropContents(level, pos, (GenericChestBlockEntity) tileEntity);
+                level.updateNeighbourForOutputSignal(pos, this);
             }
-            super.onRemove(state, worldIn, pos, newState, isMoving);
+            super.onRemove(state, level, pos, newState, isMoving);
         }
     }
 
     @Override
-    public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
-        if (worldIn.isClientSide) {
+    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
+        if (level.isClientSide) {
             return InteractionResult.SUCCESS;
         } else {
-            MenuProvider menuProvider = this.getMenuProvider(state, worldIn, pos);
+            MenuProvider menuProvider = this.getMenuProvider(state, level, pos);
             if (menuProvider != null) {
                 player.openMenu(menuProvider);
                 player.awardStat(this.getOpenChestStat());
@@ -184,8 +183,8 @@ public abstract class GenericRepairChest extends BaseEntityBlock implements Simp
         return Stats.CUSTOM.get(Stats.OPEN_CHEST);
     }
 
-    public BlockEntityType<? extends GenericRepairChestTileEntity> blockEntityType() {
-        return this.tileEntityTypeSupplier.get();
+    public BlockEntityType<? extends GenericChestBlockEntity> blockEntityType() {
+        return this.blockEntityTypeSupplier.get();
     }
 
     @Nullable
@@ -193,7 +192,7 @@ public abstract class GenericRepairChest extends BaseEntityBlock implements Simp
         return chestBlock.combine(state, worldIn, pos, ignore).<Optional<Container>>apply(CHEST_COMBINER).orElse((Container) null);
     }
 
-    public DoubleBlockCombiner.NeighborCombineResult<? extends GenericRepairChestTileEntity> combine(BlockState blockState, Level level, BlockPos blockPos, boolean ignoreBlockedChest) {
+    public DoubleBlockCombiner.NeighborCombineResult<? extends GenericChestBlockEntity> combine(BlockState blockState, Level level, BlockPos blockPos, boolean ignoreBlockedChest) {
         BiPredicate<LevelAccessor, BlockPos> biPredicate;
 
         if (ignoreBlockedChest) {
@@ -203,22 +202,23 @@ public abstract class GenericRepairChest extends BaseEntityBlock implements Simp
         } else {
             biPredicate = GenericRepairChest::isChestBlockedAt;
         }
-        return DoubleBlockCombiner.combineWithNeigbour(this.tileEntityTypeSupplier.get(), GenericRepairChest::getBlockType, GenericRepairChest::getConnectedDirection, FACING, blockState, level, blockPos, biPredicate);
+        return DoubleBlockCombiner.combineWithNeigbour(this.blockEntityTypeSupplier.get(), GenericRepairChest::getBlockType, GenericRepairChest::getConnectedDirection, FACING, blockState, level, blockPos, biPredicate);
     }
 
-    public MenuProvider getMenuProvidor(BlockState blockState, Level level, BlockPos blockPos) {
-        return this.combine(blockState, level, blockPos, false).<Optional<MenuProvider>>apply(MENU_PROVIDER_COMBINER).orElse((MenuProvider) null);
+    @Override
+    public MenuProvider getMenuProvider(BlockState blockState, Level level, BlockPos blockPos) {
+        return this.combine(blockState, level, blockPos, false).<Optional<MenuProvider>>apply(MENU_PROVIDER_COMBINER).orElse(null);
     }
 
-    public static DoubleBlockCombiner.Combiner<GenericRepairChestTileEntity, Float2FloatFunction> opennessCombiner(final LidBlockEntity lidBlockEntity) {
-        return new DoubleBlockCombiner.Combiner<GenericRepairChestTileEntity, Float2FloatFunction>() {
+    public static DoubleBlockCombiner.Combiner<GenericChestBlockEntity, Float2FloatFunction> opennessCombiner(final LidBlockEntity lidBlockEntity) {
+        return new DoubleBlockCombiner.Combiner<>() {
             @Override
-            public Float2FloatFunction acceptDouble(GenericRepairChestTileEntity blockEntity1, GenericRepairChestTileEntity blockEntity2) {
+            public Float2FloatFunction acceptDouble(GenericChestBlockEntity blockEntity1, GenericChestBlockEntity blockEntity2) {
                 return (lidBlockEntity) -> Math.max(blockEntity1.getOpenNess(lidBlockEntity), blockEntity2.getOpenNess(lidBlockEntity));
             }
 
             @Override
-            public Float2FloatFunction acceptSingle(GenericRepairChestTileEntity blockEntity) {
+            public Float2FloatFunction acceptSingle(GenericChestBlockEntity blockEntity) {
                 return blockEntity::getOpenNess;
             }
 
@@ -232,17 +232,8 @@ public abstract class GenericRepairChest extends BaseEntityBlock implements Simp
     @Override
     @Nullable
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState blockState, BlockEntityType<T> blockEntityType) {
-        return createTickerHelper(blockEntityType, this.blockEntityType(), GenericRepairChestTileEntity::tick);
+        return createTickerHelper(blockEntityType, this.blockEntityType(), GenericChestBlockEntity::tick);
     }
-
-    /*    @Override
-    public boolean eventReceived(BlockState state, Level worldIn, BlockPos pos, int id, int param) {
-        super.eventReceived(state, worldIn, pos, id, param);
-
-        TileEntity tileEntity = worldIn.getTileEntity(pos);
-        return tileEntity != null && tileEntity.receiveClientEvent(id, param);
-    }*/
-
 
     private static boolean isChestBlockedAt(LevelAccessor iWorld, BlockPos blockPos) {
         return isBlockedChestByBlock(iWorld, blockPos) || isCatSittingOn(iWorld, blockPos);
@@ -257,8 +248,8 @@ public abstract class GenericRepairChest extends BaseEntityBlock implements Simp
         List<Cat> list = iWorld.getEntitiesOfClass(Cat.class, new AABB(blockPos.getX(),
                 blockPos.getY() + 1, blockPos.getZ(), blockPos.getX() + 1, blockPos.getY() + 2, blockPos.getZ() + 1));
         if (!list.isEmpty()) {
-            for (Cat catentity : list) {
-                if (catentity.isInSittingPose()) {
+            for (Cat catEntity : list) {
+                if (catEntity.isInSittingPose()) {
                     return true;
                 }
             }
@@ -300,13 +291,9 @@ public abstract class GenericRepairChest extends BaseEntityBlock implements Simp
     public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, RandomSource random) {
         BlockEntity blockEntity = serverLevel.getBlockEntity(blockPos);
 
-        if (blockEntity instanceof GenericRepairChestTileEntity) {
-            ((GenericRepairChestTileEntity) blockEntity).recheckOpen();
+        if (blockEntity instanceof GenericChestBlockEntity) {
+            ((GenericChestBlockEntity) blockEntity).recheckOpen();
         }
-    }
-
-    public static RepairChestTypes getTypeFromItem(Item item) {
-        return getTypeFromBlock(Block.byItem(item));
     }
 
     public static RepairChestTypes getTypeFromBlock(Block block) {
@@ -316,47 +303,4 @@ public abstract class GenericRepairChest extends BaseEntityBlock implements Simp
     public RepairChestTypes getType() {
         return this.type;
     }
-
-    /*@OnlyIn(Dist.CLIENT)
-    public static TileEntityMerger.ICallback<GenericRepairChestTileEntity, Float2FloatFunction> getLid(final IChestLid p_226917_0_) {
-        return new TileEntityMerger.ICallback<GenericRepairChestTileEntity, Float2FloatFunction>() {
-            @Override
-            public Float2FloatFunction func_225539_a_(GenericRepairChestTileEntity p_225539_1_, GenericRepairChestTileEntity p_225539_2_) {
-                return (p_226921_2_) -> {
-                    return Math.max(p_225539_1_.getLidAngle(p_226921_2_), p_225539_2_.getLidAngle(p_226921_2_));
-                };
-            }
-
-            @Override
-            public Float2FloatFunction func_225538_a_(GenericRepairChestTileEntity p_225538_1_) {
-                return p_225538_1_::getLidAngle;
-            }
-
-            @Override
-            public Float2FloatFunction func_225537_b_() {
-                return p_226917_0_::getLidAngle;
-            }
-        };
-    }
-
-    public TileEntityMerger.ICallbackWrapper<? extends GenericRepairChestTileEntity> getWrapper(BlockState blockState, World world, BlockPos blockPos, boolean p_225536_4_) {
-        BiPredicate<IWorld, BlockPos> biPredicate;
-        if (p_225536_4_) {
-            biPredicate = (p_226918_0_, p_226918_1_) -> false;
-        }
-        else {
-            biPredicate = GenericRepairChest::isBlocked;
-        }
-
-        return TileEntityMerger.func_226924_a_(this.tileEntityTypeSupplier.get(), GenericRepairChest::getMergerType, GenericRepairChest::getDirectionToAttached, FACING, blockState, world, blockPos, biPredicate);
-    }
-
-    public static TileEntityMerger.Type getMergerType(BlockState blockState) {
-        return TileEntityMerger.Type.SINGLE;
-    }
-
-    public static Direction getDirectionToAttached(BlockState state) {
-        Direction direction = state.get(FACING);
-        return direction.rotateYCCW();
-    }*/
 }

@@ -1,4 +1,4 @@
-package com.dyonovan.repairchests.client;
+package com.dyonovan.repairchests.providers;
 
 import com.dyonovan.repairchests.RepairChests;
 import com.dyonovan.repairchests.blocks.RepairChestBlocks;

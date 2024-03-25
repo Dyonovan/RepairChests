@@ -4,7 +4,7 @@ import com.dyonovan.repairchests.blocks.GenericRepairChest;
 import com.dyonovan.repairchests.blocks.RepairChestTypes;
 import com.dyonovan.repairchests.client.RepairChestModels;
 import com.dyonovan.repairchests.client.RepairChestsClientEvents;
-import com.dyonovan.repairchests.tileenties.GenericRepairChestTileEntity;
+import com.dyonovan.repairchests.blockentities.GenericChestBlockEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
@@ -39,7 +39,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @OnlyIn(Dist.CLIENT)
-public class RepairChestTileEntityRenderer<T extends BlockEntity & LidBlockEntity> implements BlockEntityRenderer<T> {
+public class RepairChestBlockEntityRenderer<T extends BlockEntity & LidBlockEntity> implements BlockEntityRenderer<T> {
 
     private final ModelPart chestLid;
     private final ModelPart chestBottom;
@@ -59,7 +59,7 @@ public class RepairChestTileEntityRenderer<T extends BlockEntity & LidBlockEntit
             new ModelItem(new Vector3f(0.5F, 0.32F, 0.5F), 3.0F)
     );
 
-    public RepairChestTileEntityRenderer(BlockEntityRendererProvider.Context context) {
+    public RepairChestBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
         ModelPart modelPart = context.bakeLayer(RepairChestsClientEvents.REPAIR_CHEST);
 
         this.renderer = context.getBlockEntityRenderDispatcher();
@@ -81,7 +81,7 @@ public class RepairChestTileEntityRenderer<T extends BlockEntity & LidBlockEntit
 
     @Override
     public void render(T tileEntityIn, float partialTicks, PoseStack poseStack, MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
-        GenericRepairChestTileEntity tileEntity = (GenericRepairChestTileEntity) tileEntityIn;
+        GenericChestBlockEntity tileEntity = (GenericChestBlockEntity) tileEntityIn;
 
         Level level = tileEntity.getLevel();
         boolean useTileEntityBlockState = level != null;
@@ -104,7 +104,7 @@ public class RepairChestTileEntityRenderer<T extends BlockEntity & LidBlockEntit
             poseStack.mulPose(Axis.YP.rotationDegrees(-f));
             poseStack.translate(-0.5D, -0.5D, -0.5D);
 
-            DoubleBlockCombiner.NeighborCombineResult<? extends GenericRepairChestTileEntity> neighborCombineResult;
+            DoubleBlockCombiner.NeighborCombineResult<? extends GenericChestBlockEntity> neighborCombineResult;
 
             if (useTileEntityBlockState)
                 neighborCombineResult = genericRepairChest.combine(blockstate, level, tileEntityIn.getBlockPos(), true);

@@ -1,20 +1,19 @@
 package com.dyonovan.repairchests;
 
 import com.dyonovan.repairchests.blocks.RepairChestBlocks;
-import com.dyonovan.repairchests.client.RepairChestLangProvider;
+import com.dyonovan.repairchests.providers.RepairChestCreativeTabs;
+import com.dyonovan.repairchests.providers.RepairChestLangProvider;
 import com.dyonovan.repairchests.client.RepairChestScreen;
-import com.dyonovan.repairchests.client.RepairChestsLootTableProvider;
-import com.dyonovan.repairchests.client.renderers.RepairChestTileEntityRenderer;
+import com.dyonovan.repairchests.providers.RepairChestsLootTableProvider;
+import com.dyonovan.repairchests.client.renderers.RepairChestBlockEntityRenderer;
 import com.dyonovan.repairchests.containers.RepairChestsContainerTypes;
 import com.dyonovan.repairchests.items.RepairChestItems;
-import com.dyonovan.repairchests.tileenties.RepairChestTileEntityTypes;
+import com.dyonovan.repairchests.blockentities.RepairChestBlockEntityTypes;
+import com.dyonovan.repairchests.providers.SpriteSourceProvider;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.data.ExistingFileHelper;
@@ -25,10 +24,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.RegistryObject;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 @Mod(RepairChests.MODID)
 public class RepairChests {
@@ -55,7 +50,7 @@ public class RepairChests {
 
         RepairChestBlocks.BLOCKS.register(modBus);
         RepairChestItems.ITEMS.register(modBus);
-        RepairChestTileEntityTypes.TILE_ENTITIES.register(modBus);
+        RepairChestBlockEntityTypes.TILE_ENTITIES.register(modBus);
         RepairChestsContainerTypes.CONTAINERS.register(modBus);
         RepairChestCreativeTabs.CREATIVE_MODE_TABS.register(modBus);
     }
@@ -66,9 +61,9 @@ public class RepairChests {
         MenuScreens.register(RepairChestsContainerTypes.ADVANCED_CHEST.get(), RepairChestScreen::new);
         MenuScreens.register(RepairChestsContainerTypes.ULTIMATE_CHEST.get(), RepairChestScreen::new);
 
-        BlockEntityRenderers.register(RepairChestTileEntityTypes.BASIC_CHEST.get(), RepairChestTileEntityRenderer::new);
-        BlockEntityRenderers.register(RepairChestTileEntityTypes.ADVANCED_CHEST.get(), RepairChestTileEntityRenderer::new);
-        BlockEntityRenderers.register(RepairChestTileEntityTypes.ULTIMATE_CHEST.get(), RepairChestTileEntityRenderer::new);
+        BlockEntityRenderers.register(RepairChestBlockEntityTypes.BASIC_CHEST.get(), RepairChestBlockEntityRenderer::new);
+        BlockEntityRenderers.register(RepairChestBlockEntityTypes.ADVANCED_CHEST.get(), RepairChestBlockEntityRenderer::new);
+        BlockEntityRenderers.register(RepairChestBlockEntityTypes.ULTIMATE_CHEST.get(), RepairChestBlockEntityRenderer::new);
     }
 
     private void setup(final FMLCommonSetupEvent event) {

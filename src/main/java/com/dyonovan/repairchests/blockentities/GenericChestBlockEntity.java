@@ -1,4 +1,4 @@
-package com.dyonovan.repairchests.tileenties;
+package com.dyonovan.repairchests.blockentities;
 
 import com.dyonovan.repairchests.RepairChests;
 import com.dyonovan.repairchests.blocks.GenericRepairChest;
@@ -17,7 +17,6 @@ import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.*;
@@ -25,25 +24,24 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.function.Supplier;
 
-public abstract class GenericRepairChestTileEntity extends RandomizableContainerBlockEntity implements LidBlockEntity {
+public abstract class GenericChestBlockEntity extends RandomizableContainerBlockEntity implements LidBlockEntity {
 
-    private static final int EVENT_SET_OPEN_COUNT = 1;
     private NonNullList<ItemStack> chestContents;
 
     private final ContainerOpenersCounter openersCounter = new ContainerOpenersCounter() {
         @Override
         protected void onOpen(Level level, BlockPos blockPos, BlockState blockState) {
-            GenericRepairChestTileEntity.playSound(level, blockPos, blockState, SoundEvents.CHEST_OPEN);
+            GenericChestBlockEntity.playSound(level, blockPos, SoundEvents.CHEST_OPEN);
         }
 
         @Override
         protected void onClose(Level level, BlockPos blockPos, BlockState blockState) {
-            GenericRepairChestTileEntity.playSound(level, blockPos, blockState, SoundEvents.CHEST_CLOSE);
+            GenericChestBlockEntity.playSound(level, blockPos, SoundEvents.CHEST_CLOSE);
         }
 
         @Override
         protected void openerCountChanged(Level level, BlockPos blockPos, BlockState blockState, int i, int i1) {
-            GenericRepairChestTileEntity.this.signalOpenCount(level, blockPos, blockState, i, i1);
+            GenericChestBlockEntity.this.signalOpenCount(level, blockPos, blockState, i1);
         }
 
         @Override
@@ -52,20 +50,20 @@ public abstract class GenericRepairChestTileEntity extends RandomizableContainer
                 return false;
             } else {
                 Container container = ((RepairChestContainer) player.containerMenu).getContainer();
-                return container instanceof GenericRepairChestTileEntity || container instanceof CompoundContainer &&
-                        ((CompoundContainer) container).contains(GenericRepairChestTileEntity.this);
+                return container instanceof GenericChestBlockEntity || container instanceof CompoundContainer &&
+                        ((CompoundContainer) container).contains(GenericChestBlockEntity.this);
             }
         }
     };
 
     private final ChestLidController chestLidController = new ChestLidController();
 
-    private RepairChestTypes chestType;
-    private Supplier<Block> blockToUse;
+    private final RepairChestTypes chestType;
+    private final Supplier<Block> blockToUse;
 
     private int tickNum;
 
-    protected GenericRepairChestTileEntity(BlockEntityType<?> blockEntityType, BlockPos blockPos, BlockState state, RepairChestTypes chestTypeIn, Supplier<Block> blockToUseIn) {
+    protected GenericChestBlockEntity(BlockEntityType<?> blockEntityType, BlockPos blockPos, BlockState state, RepairChestTypes chestTypeIn, Supplier<Block> blockToUseIn) {
         super(blockEntityType, blockPos, state);
 
         this.chestContents = NonNullList.withSize(chestTypeIn.size, ItemStack.EMPTY);
@@ -103,11 +101,7 @@ public abstract class GenericRepairChestTileEntity extends RandomizableContainer
         }
     }
 
-    public static void lidAnimateTick(Level level, BlockPos blockPos, BlockState blockState, GenericRepairChestTileEntity chestTileEntity) {
-        chestTileEntity.chestLidController.tickLid();
-    }
-
-    static void playSound(Level level, BlockPos blockPos, BlockState blockState, SoundEvent soundIn) {
+    static void playSound(Level level, BlockPos blockPos, SoundEvent soundIn) {
         double d0 = (double) blockPos.getX() + 0.5D;
         double d1 = (double) blockPos.getY() + 0.5D;
         double d2 = (double) blockPos.getZ() + 0.5D;
@@ -160,26 +154,13 @@ public abstract class GenericRepairChestTileEntity extends RandomizableContainer
         return this.chestLidController.getOpenness(partialTicks);
     }
 
-    public static int getOpenCount(BlockGetter blockGetter, BlockPos blockPos) {
-        BlockState blockstate = blockGetter.getBlockState(blockPos);
-
-        if (blockstate.hasBlockEntity()) {
-            BlockEntity blockentity = blockGetter.getBlockEntity(blockPos);
-
-            if (blockentity instanceof GenericRepairChestTileEntity) {
-                return ((GenericRepairChestTileEntity) blockentity).openersCounter.getOpenerCount();
-            }
-        }
-        return 0;
-    }
-
     public void recheckOpen() {
         if (!this.remove) {
             this.openersCounter.recheckOpeners(this.getLevel(), this.getBlockPos(), this.getBlockState());
         }
     }
 
-    protected void signalOpenCount(Level level, BlockPos blockPos, BlockState blockState, int previousCount, int newCount) {
+    protected void signalOpenCount(Level level, BlockPos blockPos, BlockState blockState, int newCount) {
         Block block = blockState.getBlock();
         level.blockEvent(blockPos, block, 1, newCount);
     }
@@ -207,7 +188,7 @@ public abstract class GenericRepairChestTileEntity extends RandomizableContainer
         return this.blockToUse.get();
     }
 
-    public static void tick(Level level, BlockPos blockPos, BlockState blockState, GenericRepairChestTileEntity blockEntity) {
+    public static void tick(Level level, BlockPos blockPos, BlockState blockState, GenericChestBlockEntity blockEntity) {
         // check chest contains and repair if item is repairable
         ++blockEntity.tickNum;
         int ticktime = blockEntity.chestType == RepairChestTypes.BASIC ? 600 : blockEntity.chestType == RepairChestTypes.ADVANCED ? 400 : blockEntity.chestType == RepairChestTypes.ULTIMATE ? 200 : 600;
@@ -226,6 +207,4 @@ public abstract class GenericRepairChestTileEntity extends RandomizableContainer
 
         blockEntity.chestLidController.tickLid();
     }
-
-
 }

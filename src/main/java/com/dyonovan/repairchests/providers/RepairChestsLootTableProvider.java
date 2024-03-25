@@ -1,5 +1,6 @@
-package com.dyonovan.repairchests.client;
+package com.dyonovan.repairchests.providers;
 
+import com.dyonovan.repairchests.providers.RepairChestsBlockLoot;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;

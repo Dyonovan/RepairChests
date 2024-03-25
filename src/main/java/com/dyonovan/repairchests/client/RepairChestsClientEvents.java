@@ -1,7 +1,7 @@
 package com.dyonovan.repairchests.client;
 
 import com.dyonovan.repairchests.RepairChests;
-import com.dyonovan.repairchests.client.renderers.RepairChestTileEntityRenderer;
+import com.dyonovan.repairchests.client.renderers.RepairChestBlockEntityRenderer;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -16,6 +16,6 @@ public class RepairChestsClientEvents {
 
     @SubscribeEvent
     public static void layerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
-        event.registerLayerDefinition(REPAIR_CHEST, RepairChestTileEntityRenderer::createBodyLayer);
+        event.registerLayerDefinition(REPAIR_CHEST, RepairChestBlockEntityRenderer::createBodyLayer);
     }
 }

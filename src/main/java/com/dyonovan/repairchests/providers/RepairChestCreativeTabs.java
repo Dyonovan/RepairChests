@@ -1,5 +1,6 @@
-package com.dyonovan.repairchests;
+package com.dyonovan.repairchests.providers;
 
+import com.dyonovan.repairchests.RepairChests;
 import com.dyonovan.repairchests.blocks.RepairChestBlocks;
 import com.dyonovan.repairchests.items.RepairChestItems;
 import net.minecraft.core.registries.Registries;
